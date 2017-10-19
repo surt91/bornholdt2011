@@ -58,7 +58,7 @@ impl Bornholdt {
     }
 
     pub fn sweep(&mut self, number_of_sweeps: usize) {
-        let N = self.l * self.l;
+        let total = self.l * self.l;
 
         // clean up
         let mut free_numbers: Vec<usize> = self.opinions.iter()
@@ -69,9 +69,9 @@ impl Bornholdt {
 
         for _ in 0..number_of_sweeps {
             self.total_sweeps += 1;
-            for _ in 0..N {
+            for _ in 0..total {
                 // get random agent
-                let idx = self.rng.gen_range(0, N);
+                let idx = self.rng.gen_range(0, total);
 
                 // with chance alpha, make an innovation on a random agent
                 if self.rng.gen::<f64>() < self.alpha {
@@ -105,8 +105,8 @@ impl Bornholdt {
                     continue
                 }
 
-                // take its opinion with chance n_j / N
-                let chance = self.opinions[opinion] as f64 / N as f64;
+                // take its opinion with chance n_j / n
+                let chance = self.opinions[opinion] as f64 / total as f64;
 
                 if self.rng.gen::<f64>() < chance {
                     // println!("extend!");

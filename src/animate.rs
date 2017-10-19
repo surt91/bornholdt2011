@@ -6,9 +6,6 @@ extern crate opengl_graphics;
 extern crate fps_counter;
 extern crate rand;
 
-use std::cmp::min;
-use std::f64::consts::PI;
-
 use self::graphics::*;
 // use self::sdl2_window::Sdl2Window as Window;
 use self::glutin_window::GlutinWindow as Window;
@@ -102,7 +99,7 @@ pub trait Renderable {
 }
 
 impl Renderable for Bornholdt {
-    fn render<G>(&self, c: &Context, gfx: &mut G, size: &(u32, u32))
+    fn render<G>(&self, c: &Context, gfx: &mut G, _size: &(u32, u32))
         where G: Graphics
     {
         clear(color::hex("000000"), gfx);
