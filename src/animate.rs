@@ -1,7 +1,7 @@
 extern crate piston;
 extern crate graphics;
 extern crate glutin_window;
-extern crate sdl2_window;
+// extern crate sdl2_window;
 extern crate opengl_graphics;
 extern crate fps_counter;
 extern crate rand;
@@ -10,7 +10,8 @@ use std::cmp::min;
 use std::f64::consts::PI;
 
 use self::graphics::*;
-use self::sdl2_window::Sdl2Window as Window;
+// use self::sdl2_window::Sdl2Window as Window;
+use self::glutin_window::GlutinWindow as Window;
 use self::piston::window::WindowSettings;
 use self::piston::input::keyboard::Key::*;
 
@@ -41,40 +42,13 @@ fn hsv2rgb(h: f64, s: f64, v: f64) -> (f64, f64, f64) {
     }
 }
 
-fn angle_to_color(angle: f64) -> types::Color {
-    let (r, g, b) = hsv2rgb((angle + 2.*PI)%(2.*PI)/PI/2., 1., 1.);
+fn opinion_to_color(opinion: usize) -> types::Color {
+    let (r, g, b) = hsv2rgb(((opinion*343) % 187) as f64 / 187., 1., 1.);
     [r as f32, g as f32, b as f32, 1.]
 }
 
-// fn draw_arrow<G>(pos: (f64, f64), angle: f64, scale: f64, c: &Context, gfx: &mut G)
-//     where G: Graphics
-// {
-//     // TODO: get color from angle
-//     let color = angle_to_color(angle);
-//     let trafo = c.transform.trans(pos.0, pos.1).rot_rad(angle).scale(scale, scale);
-//
-//     let p1: types::Polygon = &[
-//         [0.,  1.],
-//         [2.,  0.],
-//         [0., -1.],
-//     ];
-//     let p2: types::Polygon = &[
-//         [ 0., 0. ],
-//         [ 0., 1. ],
-//         [-1., 1.5],
-//     ];
-//     let p3: types::Polygon = &[
-//         [ 0.,  0. ],
-//         [ 0., -1. ],
-//         [-1., -1.5],
-//     ];
-//     polygon(color, p1, trafo, gfx);
-//     polygon(color, p2, trafo, gfx);
-//     polygon(color, p3, trafo, gfx);
-// }
-
 pub fn show(model: &mut Bornholdt) {
-    let size = (model.l as u32, model.l as u32);
+    let size = (model.l as u32 * 5, model.l as u32 * 5);
     let mut window: Window = WindowSettings::new("Bornholdt", [size.0, size.1])
                                             .samples(4)
                                             .exit_on_esc(true)
@@ -100,6 +74,8 @@ pub fn show(model: &mut Bornholdt) {
             Input::Press(Button::Keyboard(key)) => {
                 match key {
                     F => println!("{} FPS", rate),
+                    S => println!("{} Sweeps", model.total_sweeps),
+                    P => if sweeps_per_second == 0. {sweeps_per_second = 100.} else {sweeps_per_second = 0.},
                     Up => {
                         sweeps_per_second *= 1.2;
                         println!("{:.0} sweeps per second", sweeps_per_second);
@@ -113,7 +89,7 @@ pub fn show(model: &mut Bornholdt) {
             }
 
             Input::Update(args) => {
-                model.sweep();
+                model.sweep((args.dt * sweeps_per_second).ceil() as usize);
             }
 
             _ => {}
@@ -131,7 +107,15 @@ impl Renderable for Bornholdt {
         where G: Graphics
     {
         clear(color::hex("000000"), gfx);
-
-        // TODO render all agents as colored pixels
+        for i in 0..self.l {
+            for j in 0..self.l {
+                rectangle(opinion_to_color(self.agents[i*self.l+j].opinion),
+                          rectangle::square(i as f64 * 5.,
+                                            j as f64 * 5.,
+                                            5.),
+                          c.transform, gfx
+                );
+            }
+        }
     }
 }
