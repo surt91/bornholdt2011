@@ -59,6 +59,14 @@ impl Bornholdt {
 
     pub fn sweep(&mut self, number_of_sweeps: usize) {
         let N = self.l * self.l;
+
+        // clean up
+        let mut free_numbers: Vec<usize> = self.opinions.iter()
+                                                        .enumerate()
+                                                        .filter(|&(_, &o)| o == 0)
+                                                        .map(|(n, _)| n)
+                                                        .collect();
+
         for _ in 0..number_of_sweeps {
             self.total_sweeps += 1;
             for _ in 0..N {
@@ -67,10 +75,22 @@ impl Bornholdt {
 
                 // with chance alpha, make an innovation on a random agent
                 if self.rng.gen::<f64>() < self.alpha {
-                    self.newest_opinion += 1;
+                    // try to recycle old numbers
+                    self.newest_opinion = match free_numbers.pop() {
+                        Some(x) => {
+                            self.opinions[x] = 1;
+                            for a in self.agents.iter_mut() {
+                                a.old_opinions.remove(&x);
+                            };
+                            x
+                        },
+                        None => {
+                            self.opinions.push(1);
+                            self.opinions.len() - 1
+                        }
+                    };
                     self.opinions[self.agents[idx].opinion] -= 1;
                     self.agents[idx].opinion = self.newest_opinion;
-                    self.opinions.push(1);
                     continue
                 }
 

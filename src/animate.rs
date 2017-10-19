@@ -50,7 +50,6 @@ fn opinion_to_color(opinion: usize) -> types::Color {
 pub fn show(model: &mut Bornholdt) {
     let size = (model.l as u32 * 5, model.l as u32 * 5);
     let mut window: Window = WindowSettings::new("Bornholdt", [size.0, size.1])
-                                            .samples(4)
                                             .exit_on_esc(true)
                                             .build()
                                             .unwrap();
