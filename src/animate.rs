@@ -14,7 +14,10 @@ use self::piston::input::keyboard::Key::*;
 
 use self::opengl_graphics::{GlGraphics, OpenGL};
 use self::piston::event_loop::{Events, EventSettings};
-use self::piston::input::{Button, Input};
+use self::piston::input::Event::{Loop, Input};
+use self::piston::input::Loop::{Render, Update};
+use self::piston::input::Input::Button;
+use self::piston::input::Button::Keyboard;
 use self::fps_counter::FPSCounter;
 
 use super::model::Bornholdt;
@@ -59,35 +62,42 @@ pub fn show(model: &mut Bornholdt) {
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
         match e {
-            Input::Render(args) => {
-                rate = fps.tick();
+            Loop(x) => match x {
+                Render(args) => {
+                    rate = fps.tick();
 
-                gfx.draw(args.viewport(), |c, gfx| {
-                    model.render(&c, gfx, &size);
-                });
-            }
+                    gfx.draw(args.viewport(), |c, gfx| {
+                        model.render(&c, gfx, &size);
+                    });
+                },
 
-            Input::Press(Button::Keyboard(key)) => {
-                match key {
-                    F => println!("{} FPS", rate),
-                    S => println!("{} Sweeps", model.total_sweeps),
-                    P => if sweeps_per_second == 0. {sweeps_per_second = 100.} else {sweeps_per_second = 0.},
-                    Up => {
-                        sweeps_per_second *= 1.2;
-                        println!("{:.0} sweeps per second", sweeps_per_second);
-                    }
-                    Down => {
-                        sweeps_per_second /= 1.2;
-                        println!("{:.0} sweeps per second", sweeps_per_second);
-                    }
+                Update(args) => {
+                    model.sweep((args.dt * sweeps_per_second).ceil() as usize);
+                },
+
+                _ => ()
+            },
+
+            Input(x) => match x {
+                Button(b) => match b.button {
+                    Keyboard(key) => match key {
+                        F => println!("{} FPS", rate),
+                        S => println!("{} Sweeps", model.total_sweeps),
+                        P => if sweeps_per_second == 0. {sweeps_per_second = 100.} else {sweeps_per_second = 0.},
+                        Up => {
+                            sweeps_per_second *= 1.2;
+                            println!("{:.0} sweeps per second", sweeps_per_second);
+                        }
+                        Down => {
+                            sweeps_per_second /= 1.2;
+                            println!("{:.0} sweeps per second", sweeps_per_second);
+                        }
+                        _ => ()
+                    },
                     _ => ()
-                };
-            }
-
-            Input::Update(args) => {
-                model.sweep((args.dt * sweeps_per_second).ceil() as usize);
-            }
-
+                },
+                _ => ()
+            },
             _ => {}
         }
     }
