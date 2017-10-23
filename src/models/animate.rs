@@ -1,12 +1,11 @@
 extern crate piston;
-extern crate graphics;
 extern crate glutin_window;
 // extern crate sdl2_window;
 extern crate opengl_graphics;
 extern crate fps_counter;
 extern crate rand;
 
-use self::graphics::*;
+use super::graphics::*;
 // use self::sdl2_window::Sdl2Window as Window;
 use self::glutin_window::GlutinWindow as Window;
 use self::piston::window::WindowSettings;
@@ -18,9 +17,10 @@ use self::piston::input::Event::{Loop, Input};
 use self::piston::input::Loop::{Render, Update};
 use self::piston::input::Input::Button;
 use self::piston::input::Button::Keyboard;
+use self::piston::input::ButtonState::Press;
 use self::fps_counter::FPSCounter;
 
-use super::model::Bornholdt;
+use super::Model;
 
 /// convert a hsv color representations into a rgb representation
 fn hsv2rgb(h: f64, s: f64, v: f64) -> (f64, f64, f64) {
@@ -42,13 +42,18 @@ fn hsv2rgb(h: f64, s: f64, v: f64) -> (f64, f64, f64) {
     }
 }
 
-fn opinion_to_color(opinion: usize) -> types::Color {
-    let (r, g, b) = hsv2rgb(((opinion*343) % 187) as f64 / 187., 1., 1.);
+pub fn opinion_to_color(opinion: usize) -> types::Color {
+    let (r, g, b) = hsv2rgb(((opinion*30) % 187) as f64 / 187., 1., 1.);
     [r as f32, g as f32, b as f32, 1.]
 }
 
-pub fn show(model: &mut Bornholdt) {
-    let size = (model.l as u32 * 5, model.l as u32 * 5);
+pub trait Renderable {
+    fn render<G>(&self, c: &Context, gfx: &mut G, size: &(u32, u32))
+        where G: Graphics;
+}
+
+pub fn show<T: Renderable + Model>(model: &mut T) {
+    let size = (model.l() as u32 * 5, model.l() as u32 * 5);
     let mut window: Window = WindowSettings::new("Bornholdt", [size.0, size.1])
                                             .exit_on_esc(true)
                                             .build()
@@ -79,49 +84,31 @@ pub fn show(model: &mut Bornholdt) {
             },
 
             Input(x) => match x {
-                Button(b) => match b.button {
-                    Keyboard(key) => match key {
-                        F => println!("{} FPS", rate),
-                        S => println!("{} Sweeps", model.total_sweeps),
-                        P => if sweeps_per_second == 0. {sweeps_per_second = 100.} else {sweeps_per_second = 0.},
-                        Up => {
-                            sweeps_per_second *= 1.2;
-                            println!("{:.0} sweeps per second", sweeps_per_second);
-                        }
-                        Down => {
-                            sweeps_per_second /= 1.2;
-                            println!("{:.0} sweeps per second", sweeps_per_second);
-                        }
-                        _ => ()
-                    },
-                    _ => ()
+                Button(b) =>
+                {
+                    if b.state == Press {
+                        match b.button {
+                            Keyboard(key) => match key {
+                                F => println!("{} FPS", rate),
+                                S => println!("{} Sweeps", model.total_sweeps()),
+                                P => if sweeps_per_second == 0. {sweeps_per_second = 100.} else {sweeps_per_second = 0.},
+                                Up => {
+                                    sweeps_per_second *= 1.2;
+                                    println!("{:.0} sweeps per second", sweeps_per_second);
+                                }
+                                Down => {
+                                    sweeps_per_second /= 1.2;
+                                    println!("{:.0} sweeps per second", sweeps_per_second);
+                                }
+                                _ => ()
+                            },
+                            _ => ()
+                        };
+                    }
                 },
                 _ => ()
             },
             _ => {}
-        }
-    }
-}
-
-pub trait Renderable {
-    fn render<G>(&self, c: &Context, gfx: &mut G, size: &(u32, u32))
-        where G: Graphics;
-}
-
-impl Renderable for Bornholdt {
-    fn render<G>(&self, c: &Context, gfx: &mut G, _size: &(u32, u32))
-        where G: Graphics
-    {
-        clear(color::hex("000000"), gfx);
-        for i in 0..self.l {
-            for j in 0..self.l {
-                rectangle(opinion_to_color(self.agents[i*self.l+j].opinion),
-                          rectangle::square(i as f64 * 5.,
-                                            j as f64 * 5.,
-                                            5.),
-                          c.transform, gfx
-                );
-            }
         }
     }
 }

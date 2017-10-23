@@ -3,19 +3,22 @@ use self::rand::{Rng, SeedableRng};
 
 use std::collections::HashSet;
 
-pub struct Agent {
+use super::animate::Renderable;
+use super::Model;
+
+struct Agent {
     pub opinion: usize,
     pub old_opinions: HashSet<usize>,
     pub neighbors: [usize; 4]
 }
 
 pub struct Bornholdt {
-    pub l: usize,
-    pub alpha: f64,
-    pub agents: Vec<Agent>,
-    pub opinions: Vec<usize>,
+    l: usize,
+    alpha: f64,
+    agents: Vec<Agent>,
+    opinions: Vec<usize>,
     newest_opinion: usize,
-    pub total_sweeps: usize,
+    total_sweeps: usize,
     rng: rand::XorShiftRng,
 }
 
@@ -56,8 +59,18 @@ impl Bornholdt {
             rng
         }
     }
+}
 
-    pub fn sweep(&mut self, number_of_sweeps: usize) {
+impl Model for Bornholdt {
+    fn l(&self) -> usize {
+        self.l
+    }
+
+    fn total_sweeps(&self) -> usize {
+        self.total_sweeps
+    }
+
+    fn sweep(&mut self, number_of_sweeps: usize) {
         let total = self.l * self.l;
 
         // clean up
@@ -115,6 +128,26 @@ impl Bornholdt {
                     self.opinions[opinion] += 1;
                     agent.opinion = opinion;
                 }
+            }
+        }
+    }
+}
+
+use super::graphics::*;
+use super::animate::opinion_to_color;
+impl Renderable for super::Bornholdt {
+    fn render<G>(&self, c: &Context, gfx: &mut G, _size: &(u32, u32))
+        where G: Graphics
+    {
+        clear(color::hex("000000"), gfx);
+        for i in 0..self.l {
+            for j in 0..self.l {
+                rectangle(opinion_to_color(self.agents[i*self.l+j].opinion),
+                          rectangle::square(i as f64 * 5.,
+                                            j as f64 * 5.,
+                                            5.),
+                          c.transform, gfx
+                );
             }
         }
     }
