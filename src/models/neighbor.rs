@@ -9,7 +9,7 @@ struct Agent {
     pub neighbors: [usize; 4]
 }
 
-pub struct Noise {
+pub struct Neighbor {
     l: usize,
     alpha: f64,
     agents: Vec<Agent>,
@@ -17,8 +17,8 @@ pub struct Noise {
     rng: rand::XorShiftRng,
 }
 
-impl Noise {
-    pub fn new(l: usize, alpha: f64) -> Noise {
+impl Neighbor {
+    pub fn new(l: usize, alpha: f64) -> Neighbor {
         let mut agents: Vec<Agent> = Vec::new();
         let mut rng = rand::XorShiftRng::from_seed([13, 42, 23, 15]);
 
@@ -38,7 +38,7 @@ impl Noise {
             }
         }
 
-        Noise {
+        Neighbor {
             l,
             alpha,
             agents,
@@ -48,7 +48,7 @@ impl Noise {
     }
 }
 
-impl Model for Noise {
+impl Model for Neighbor {
     fn l(&self) -> usize {
         self.l
     }
@@ -59,7 +59,6 @@ impl Model for Noise {
 
     fn sweep(&mut self, number_of_sweeps: usize) {
         let total = self.l * self.l;
-
 
         for _ in 0..number_of_sweeps {
             self.total_sweeps += 1;
@@ -73,13 +72,18 @@ impl Model for Noise {
                 let idx = self.rng.gen_range(0, total);
 
                 // get random neighbor
-                let n = self.rng.gen_range(0, 4);
-                let opinion = self.agents[self.agents[idx].neighbors[n]].opinion;
+                let n1 = self.rng.gen_range(0, 4);
+                let mut n2;
+                while {
+                    n2 = self.rng.gen_range(0, 4);
+                    n1 == n2
+                } {}
 
-                let agent = &mut self.agents[idx];
-
-                // take its opinion
-                agent.opinion = opinion;
+                if self.agents[self.agents[idx].neighbors[n1]].opinion == self.agents[self.agents[idx].neighbors[n2]].opinion
+                {
+                    // take its opinion
+                    self.agents[idx].opinion = self.agents[self.agents[idx].neighbors[n1]].opinion;
+                }
             }
         }
     }
@@ -88,7 +92,7 @@ impl Model for Noise {
 
 use super::graphics::*;
 use super::animate::opinion_to_color;
-impl Renderable for super::Noise {
+impl Renderable for super::Neighbor {
     fn render<G>(&self, c: &Context, gfx: &mut G, _size: &(u32, u32))
         where G: Graphics
     {
