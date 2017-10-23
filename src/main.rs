@@ -13,7 +13,10 @@ fn main() {
             let mut v = models::Simple::new(options.length);
             animate::show(&mut v);
         },
-        ModelType::Noise => unimplemented!(),
+        ModelType::Noise => {
+            let mut v = models::Noise::new(options.length, options.alpha);
+            animate::show(&mut v);
+        },
         ModelType::Neighbor => unimplemented!(),
         ModelType::Bornholdt => {
             let mut v = models::Bornholdt::new(options.length, options.alpha);
