@@ -5,6 +5,9 @@ use std::collections::HashSet;
 
 use super::animate::Renderable;
 use super::Model;
+use super::graphics::*;
+use super::animate::opinion_to_color;
+use super::square_neighbors;
 
 struct Agent {
     pub opinion: usize,
@@ -27,11 +30,7 @@ impl Bornholdt {
         let mut agents: Vec<Agent> = Vec::new();
         for i in 0..l {
             for j in 0..l {
-                let mut neighbors = [0; 4]; // right, up, left, down
-                neighbors[0] = if j == l-1 {i * l + 0} else {i*l + (j+1)};
-                neighbors[1] = if i == 0 {(l-1) * l + j} else {(i-1)*l + j};
-                neighbors[2] = if j == 0 {i * l + (l-1)} else {i*l + (j-1)};
-                neighbors[3] = if i == l-1 {0 * l + j} else {(i+1)*l + j};
+                let neighbors = square_neighbors(i, j, l);
 
                 let mut old_opinions = HashSet::new();
                 old_opinions.insert(0);
@@ -133,8 +132,6 @@ impl Model for Bornholdt {
     }
 }
 
-use super::graphics::*;
-use super::animate::opinion_to_color;
 impl Renderable for super::Bornholdt {
     fn render<G>(&self, c: &Context, gfx: &mut G, _size: &(u32, u32))
         where G: Graphics
