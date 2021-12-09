@@ -8,6 +8,14 @@ use parse_cl::{parse_cl, ModelType};
 
 fn main() {
     let options = parse_cl();
+
+    println!("Some things can be controlled at run time:");
+    println!("F: show current framerate");
+    println!("S: show number of sweeps");
+    println!("P: ??");
+    println!("Up: increase sweeps per second");
+    println!("Down: decrese sweeps per second");
+
     match options.model_type {
         ModelType::Simple => {
             let mut v = models::Simple::new(options.length);

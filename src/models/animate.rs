@@ -56,6 +56,8 @@ pub fn show<T: Renderable + Model>(model: &mut T) {
     let size = (model.l() as u32 * 5, model.l() as u32 * 5);
     let mut window: Window = WindowSettings::new("Bornholdt", [size.0, size.1])
                                             .exit_on_esc(true)
+                                            .decorated(false)
+                                            .srgb(false)
                                             .build()
                                             .unwrap();
 
